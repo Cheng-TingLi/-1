@@ -335,9 +335,9 @@
           <button type="button" onclick="advanceRunner(1,2)" class="btn-adv">1→2</button>
           <button type="button" onclick="advanceRunner(1,3)" class="btn-adv">1→3</button>
           <button type="button" onclick="advanceRunner(2,3)" class="btn-adv">2→3</button>
-          <button type="button" onclick="scoreRunner(1)" class="btn-score">1得分</button>
-          <button type="button" onclick="scoreRunner(2)" class="btn-score">2得分</button>
-          <button type="button" onclick="scoreRunner(3)" class="btn-score">3得分</button>
+          <button type="button" onclick="scoreRunner(1)" class="btn-score">一壘回來得分</button>
+          <button type="button" onclick="scoreRunner(2)" class="btn-score">二壘回來得分</button>
+          <button type="button" onclick="scoreRunner(3)" class="btn-score">三壘回來得分</button>
           <button type="button" onclick="advanceAllOne()" class="btn-adv">全推進1</button>
         </div>
       </div>
@@ -678,6 +678,12 @@ window.recordResult=function(type,fromAuto){
       return;
     }
   }
+  if(type==='SF'){
+    if(!state.bases[2]){
+      alert('三壘無人，無法高飛犧牲');
+      return;
+    }
+  }
   if(!fromAuto)saveHistory();
   var team=currentTeam(),batter=currentBatter();
   if(!batter){alert('找不到目前打者，請重新開始比賽');return;}
@@ -716,9 +722,36 @@ window.recordResult=function(type,fromAuto){
     case'GO':case'FO':case'LO':outsAdded=1;s.ab++;msg='#'+batter.num+' '+batter.name+' '+(type==='GO'?'滾地球':type==='FO'?'飛球':'平飛')+'出局';break;
     case'FC':outsAdded=1;s.ab++;if(state.outs+1<3)state.bases=[true,state.bases[1],state.bases[2]];msg='#'+batter.num+' '+batter.name+' 野選';break;
     case'E':isError=true;if(!state.bases[0])state.bases[0]=true;else if(!state.bases[1])state.bases[1]=true;else if(!state.bases[2])state.bases[2]=true;else runsScored=1;s.ab++;msg='#'+batter.num+' '+batter.name+' 因失誤上壘';break;
-    case'SF':outsAdded=1;if(state.bases[2]){runsScored=1;state.bases[2]=false;}s.sf++;s.rbi+=runsScored;msg='#'+batter.num+' '+batter.name+' 犧牲飛球';break;
+    case'SF':
+      // 僅三壘有人：三壘跑者得分，打者出局（不記打數，記犧飛）
+      outsAdded=1;
+      runsScored=1;
+      state.bases[2]=false;
+      s.sf++;
+      s.rbi+=1;
+      msg='#'+batter.num+' '+batter.name+' 犧牲飛球（三壘跑者得分）';
+      break;
     case'SH':outsAdded=1;if(state.bases[2]){runsScored=1;state.bases[2]=false;}if(state.bases[1]){state.bases[2]=true;state.bases[1]=false;}if(state.bases[0]){state.bases[1]=true;state.bases[0]=false;}s.sh++;s.rbi+=runsScored;msg='#'+batter.num+' '+batter.name+' 犧牲觸擊';break;
-    case'DP':outsAdded=Math.min(2,3-state.outs);state.bases=[false,false,false];s.ab++;s.gdp++;msg='#'+batter.num+' '+batter.name+' 雙殺打';break;
+    case'DP':
+      outsAdded=Math.min(2,3-state.outs);
+      s.ab++;s.gdp++;
+      // 一二壘有人：二壘跑者上三壘，其餘清除（打者與一壘跑者出局）
+      if(state.bases[0] && state.bases[1]){
+        state.bases=[false,false,true]; // 留三壘
+        msg='#'+batter.num+' '+batter.name+' 雙殺打（二壘跑者上三壘）';
+      } else if(state.bases[0] && state.bases[2] && !state.bases[1]){
+        // 一三壘：一壘跑者出局，三壘視情況 — 簡化留三壘
+        state.bases=[false,false,true];
+        msg='#'+batter.num+' '+batter.name+' 雙殺打（三壘仍有跑者）';
+      } else if(state.bases[1] && !state.bases[0]){
+        // 僅二壘等：清壘
+        state.bases=[false,false,false];
+        msg='#'+batter.num+' '+batter.name+' 雙殺打';
+      } else {
+        state.bases=[false,false,false];
+        msg='#'+batter.num+' '+batter.name+' 雙殺打';
+      }
+      break;
     default:msg='#'+batter.num+' '+batter.name+' '+type;
   }
   if(isHit)state.hits[team]++;
