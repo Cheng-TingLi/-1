@@ -27,6 +27,7 @@
     #setup { max-width: 800px; margin: 0 auto; }
     #setup h1 { text-align: center; margin-bottom: 10px; }
     #setup .subtitle { text-align: center; color: var(--muted); margin-bottom: 20px; font-size: 1rem; }
+    .setup-pitcher-box { background: var(--card); border-radius: 10px; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border); }
     .team-row { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
     .team-row label { flex: 1; min-width: 140px; font-size: 15px; }
     .team-row input { width: 100%; }
@@ -226,9 +227,17 @@
       <label>客隊名稱<br><input type="text" id="awayName" value="客隊"></label>
       <label>主隊名稱<br><input type="text" id="homeName" value="主隊"></label>
     </div>
-    <div class="team-row">
-      <label>客隊先發投手背號<br><input type="text" id="awayPitcherNum" placeholder="例如 18" inputmode="numeric"></label>
-      <label>主隊先發投手背號<br><input type="text" id="homePitcherNum" placeholder="例如 17" inputmode="numeric"></label>
+    <div class="setup-pitcher-box">
+      <h3 style="margin-bottom:8px;">先發投手（可不在九人打線中）</h3>
+      <div class="team-row">
+        <label>客隊投手背號<br><input type="text" id="awayPitcherNum" placeholder="背號" inputmode="numeric" value="18"></label>
+        <label>客隊投手姓名<br><input type="text" id="awayPitcherName" placeholder="姓名" value="王大明"></label>
+      </div>
+      <div class="team-row">
+        <label>主隊投手背號<br><input type="text" id="homePitcherNum" placeholder="背號" inputmode="numeric" value="17"></label>
+        <label>主隊投手姓名<br><input type="text" id="homePitcherName" placeholder="姓名" value="趙子龍"></label>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:4px;">有指定打擊（DH）時，投手只需填這裡，不必排進打線。</p>
     </div>
     <h3 style="margin-bottom:8px;">客隊先發打線（9人）</h3>
     <table class="lineup-table"><thead><tr><th style="width:36px;">棒次</th><th style="width:52px;">背號</th><th>姓名</th><th style="width:96px;">位置</th></tr></thead>
@@ -553,8 +562,26 @@ window.startGame=function(){
   }
 var awayPNum=(document.getElementById('awayPitcherNum').value||'').trim();
   var homePNum=(document.getElementById('homePitcherNum').value||'').trim();
-  state.awayPitcher=findPlayerByNumber(state.awayLineup,awayPNum)||state.awayLineup[0];
-  state.homePitcher=findPlayerByNumber(state.homeLineup,homePNum)||state.homeLineup[0];
+  var awayPNameEl=document.getElementById('awayPitcherName');
+  var homePNameEl=document.getElementById('homePitcherName');
+  var awayPName=(awayPNameEl&&awayPNameEl.value||'').trim();
+  var homePName=(homePNameEl&&homePNameEl.value||'').trim();
+  state.awayPitcher=findPlayerByNumber(state.awayLineup,awayPNum);
+  if(state.awayPitcher){
+    if(awayPName) state.awayPitcher.name=awayPName;
+  } else {
+    state.awayPitcher={num:awayPNum||'?', name:awayPName||'客隊投手', pos:'投手', stats:emptyStats(), pstats:emptyPitchStats()};
+  }
+  state.homePitcher=findPlayerByNumber(state.homeLineup,homePNum);
+  if(state.homePitcher){
+    if(homePName) state.homePitcher.name=homePName;
+  } else {
+    state.homePitcher={num:homePNum||'?', name:homePName||'主隊投手', pos:'投手', stats:emptyStats(), pstats:emptyPitchStats()};
+  }
+  if(!state.awayPitcher.pstats) state.awayPitcher.pstats=emptyPitchStats();
+  if(!state.homePitcher.pstats) state.homePitcher.pstats=emptyPitchStats();
+  if(!state.awayPitcher.stats) state.awayPitcher.stats=emptyStats();
+  if(!state.homePitcher.stats) state.homePitcher.stats=emptyStats();
   // 每位球員加投球成績與守備歷程
   state.awaySlots=[]; state.homeSlots=[];
   for(var ti=0;ti<9;ti++){
@@ -586,7 +613,7 @@ var awayPNum=(document.getElementById('awayPitcherNum').value||'').trim();
   
   updateUI();
   addLog('比賽開始｜'+state.awayName+' vs '+state.homeName);
-  addLog('━━━ 1上 開始（客場進攻）━━━');
+  addLog('━━━ 1上 開始（'+(state.awayName||'客隊')+'進攻）━━━');
   addLog('先發投手：'+state.awayName+' #'+state.awayPitcher.num+' '+state.awayPitcher.name+' ／ '+state.homeName+' #'+state.homePitcher.num+' '+state.homePitcher.name);
 };
 function currentTeam(){return state.isTop?'away':'home';}
@@ -847,28 +874,25 @@ function advanceRunners(basesToAdvance){
 }
 window.steal=function(fromBase){
   if(!state.bases[fromBase-1]){alert('目前'+fromBase+'壘沒有跑者');return;}
-  saveHistory();var toBase=fromBase+1;
+  saveHistory();
+  var toBase=fromBase+1;
   var note='';
   if(toBase===4){
-    state.bases[2]=false;var team=currentTeam(),inn=Math.min(state.inning-1,6);state.runs[team][inn]+=1;
-    note='三壘跑者盜本壘成功（得1分）';
-    addLog(state.inning+(state.isTop?'上':'下')+'｜'+note);
+    state.bases[2]=false;
+    var team=currentTeam(),inn=Math.min(state.inning-1,6);
+    state.runs[team][inn]+=1;
+    note='三壘跑者盜本壘成功 → 得分';
   } else {
     if(state.bases[toBase-1]){alert(toBase+'壘已有跑者，無法直接盜壘');state.history.pop();return;}
-    state.bases[fromBase-1]=false;state.bases[toBase-1]=true;
-    note=fromBase+'壘跑者盜上'+toBase+'壘';
-    addLog(state.inning+(state.isTop?'上':'下')+'｜'+note);
+    state.bases[fromBase-1]=false;
+    state.bases[toBase-1]=true;
+    var labels=['','一','二','三'];
+    note=labels[fromBase]+'壘跑者盜上'+labels[toBase]+'壘（'+fromBase+'→'+toBase+'）';
   }
-  // 附在目前打席逐球過程
-  if(state.currentPitches && state.currentPitches.length){
-    var lp=state.currentPitches[state.currentPitches.length-1];
-    lp.label = (lp.label||'') + ' ' + note + '。';
-    lp.kind = lp.kind || 'e';
-  } else {
-    state.currentPitches = state.currentPitches || [];
-    state.currentPitches.push({kind:'e', label:note+'。', balls:state.balls, strikes:state.strikes, outs:state.outs});
-  }
-  // 打者盜壘數（簡化：不指定是誰，略過；可日後強化）
+  // 簡化：打者盜壘數+1（可之後指定跑者）
+  var bat=currentBatter();
+  if(bat&&bat.stats) bat.stats.sb=(bat.stats.sb||0)+1;
+  pushPlayEvent(note, {noPitch:true});
   updateUI();
 };
 window.advanceRunner=function(fromBase,toBase){
@@ -899,41 +923,55 @@ window.scoreRunner=function(fromBase){
 };
 
 window.wildPitch=function(){
+  if(!state.bases[0]&&!state.bases[1]&&!state.bases[2]){alert('壘上無人，無法暴投');return;}
+
   saveHistory();
-  state.balls++;
+  // 計1球，不自動加壞球（請自行按好／壞球）
   var p=ensurePitcherStats(currentPitcher());
-  if(p&&p.pstats){p.pstats.wp++;}
+  if(p&&p.pstats){ p.pstats.pitches+=1; p.pstats.wp++; }
   var scored=0;
   if(state.bases[0]||state.bases[1]||state.bases[2]){
     scored=advanceRunners(1);
     var team=currentTeam(),inn=Math.min(state.inning-1,6);
-    if(scored>0){state.runs[team][inn]+=scored;if(p&&p.pstats){p.pstats.r+=scored;p.pstats.er+=scored;}}
+    if(scored>0){
+      state.runs[team][inn]+=scored;
+      if(p&&p.pstats){ p.pstats.r+=scored; p.pstats.er+=scored; }
+    }
   }
-  if(state.balls>=4){
-    pushPlayEvent('暴投（並四壞）', {noPitch:false});
-    recordResult('BB',true);
-    return;
-  }
-  var msg='暴投'+(scored>0?('（得'+scored+'分）'):'');
-  pushPlayEvent(msg, {noPitch:true});
+  var msg='暴投（計1球）'+(scored>0?('，推進並得'+scored+'分'):(state.bases[0]||state.bases[1]||state.bases[2]||scored?'，跑者推進':''));
+  // 顯示為有球數事件
+  state.atBatLog = state.atBatLog || [];
+  state.atBatLog.push({
+    inning:state.inning, half:state.isTop?'上':'下',
+    batter:'場上事件', pitcher:p?('#'+p.num+' '+p.name):'',
+    pitches:[{kind:'e',label:'暴投'}], summary:msg, pitchCount:1, noPitch:false, isEvent:true
+  });
+  if(state.atBatLog.length>60) state.atBatLog.shift();
+  addLog(state.inning+(state.isTop?'上':'下')+'｜'+msg);
   updateUI();
 };
 window.passedBall=function(){
+  if(!state.bases[0]&&!state.bases[1]&&!state.bases[2]){alert('壘上無人，無法捕逸');return;}
+
   saveHistory();
-  state.balls++;
+  // 計1球，不自動加壞球
+  var p=ensurePitcherStats(currentPitcher());
+  if(p&&p.pstats){ p.pstats.pitches+=1; }
   var scored=0;
   if(state.bases[0]||state.bases[1]||state.bases[2]){
     scored=advanceRunners(1);
     var team=currentTeam(),inn=Math.min(state.inning-1,6);
-    if(scored>0)state.runs[team][inn]+=scored;
+    if(scored>0) state.runs[team][inn]+=scored;
   }
-  if(state.balls>=4){
-    pushPlayEvent('捕逸（並四壞）', {noPitch:false});
-    recordResult('BB',true);
-    return;
-  }
-  var msg='捕逸'+(scored>0?('（得'+scored+'分）'):'');
-  pushPlayEvent(msg, {noPitch:true});
+  var msg='捕逸（計1球）'+(scored>0?('，推進並得'+scored+'分'):'');
+  state.atBatLog = state.atBatLog || [];
+  state.atBatLog.push({
+    inning:state.inning, half:state.isTop?'上':'下',
+    batter:'場上事件', pitcher:p?('#'+p.num+' '+p.name):'',
+    pitches:[{kind:'e',label:'捕逸'}], summary:msg, pitchCount:1, noPitch:false, isEvent:true
+  });
+  if(state.atBatLog.length>60) state.atBatLog.shift();
+  addLog(state.inning+(state.isTop?'上':'下')+'｜'+msg);
   updateUI();
 };
 window.balk=function(){
@@ -991,10 +1029,10 @@ window.nextHalfInning=function(auto){
   state.outs=0;state.balls=0;state.strikes=0;state.bases=[false,false,false];state.currentPitches=[];
   if(state.isTop){
     state.isTop=false;
-    addLog('━━━ '+prevInning+'下 開始（主場進攻）━━━');
+    addLog('━━━ '+prevInning+'下 開始（'+(state.homeName||'主隊')+'進攻）━━━');
   } else {
     state.isTop=true; state.inning++;
-    addLog('━━━ '+state.inning+'上 開始（客場進攻）━━━');
+    addLog('━━━ '+state.inning+'上 開始（'+(state.awayName||'客隊')+'進攻）━━━');
     if(state.inning>7) addLog('═══ 已超過 7 局（可繼續延長）═══');
   }
   updateUI();
@@ -1649,7 +1687,7 @@ function updateUI(){
       for(var hi=0; hi<halves.length; hi++){
         var H = halves[hi];
         var label = H.inning + H.half;
-        var side = H.half==='上' ? '客場進攻' : '主場進攻';
+        var side = (H.half==='上' ? (state.awayName||'客隊') : (state.homeName||'主隊')) + '進攻';
         logHtml += '<div class="log-entry log-half">━━━ '+label+' 開始（'+side+'）━━━</div>';
         for(var ai=0; ai<H.atBats.length; ai++){
           var abat = H.atBats[ai];
@@ -1672,10 +1710,12 @@ function updateUI(){
           logHtml += '<div class="log-entry" style="color:#94a3b8;font-size:12px;">（進行中）</div>';
         }
       }
-      // 其他重要訊息（換人等）附在最後
+      // 比賽開始置頂（用目前隊名）
+      logHtml = '<div class="log-entry" style="font-weight:700;color:#38bdf8;">比賽開始｜'+(state.awayName||'客隊')+' vs '+(state.homeName||'主隊')+'</div>' + logHtml;
+      // 其他重要訊息
       for(var M=0;M<(state.log||[]).length;M++){
         var line=state.log[M];
-        if(line.indexOf('更換')>=0||line.indexOf('代打')>=0||line.indexOf('守備')>=0||line.indexOf('比賽開始')>=0){
+        if(line.indexOf('更換')>=0||line.indexOf('代打')>=0||line.indexOf('守備')>=0){
           if(line.indexOf('━━━')<0 && line.indexOf('結束')<0)
             logHtml+='<div class="log-entry">'+line+'</div>';
         }
