@@ -604,7 +604,11 @@ function saveHistory(){
     runs:JSON.parse(JSON.stringify(state.runs)),hits:{away:state.hits.away,home:state.hits.home},
     errors:{away:state.errors.away,home:state.errors.home},
     awayLineup:JSON.parse(JSON.stringify(state.awayLineup)),homeLineup:JSON.parse(JSON.stringify(state.homeLineup)),
-    logLen:state.log.length
+    awayPitchLog:state.awayPitchLog, homePitchLog:state.homePitchLog,
+    awaySlots:state.awaySlots, homeSlots:state.homeSlots,
+    logLen:state.log.length,
+    atBatLogLen:(state.atBatLog||[]).length,
+    currentPitches:state.currentPitches||[]
   })));
   if(state.history.length>50)state.history.shift();
 }
@@ -614,7 +618,14 @@ window.undoLast=function(){
   state.inning=prev.inning;state.isTop=prev.isTop;state.outs=prev.outs;state.balls=prev.balls;state.strikes=prev.strikes;state.bases=prev.bases;
   state.awayBatterIdx=prev.awayBatterIdx;state.homeBatterIdx=prev.homeBatterIdx;state.awayPitcher=prev.awayPitcher;state.homePitcher=prev.homePitcher;
   state.runs=prev.runs;state.hits=prev.hits;state.errors=prev.errors;state.awayLineup=prev.awayLineup;state.homeLineup=prev.homeLineup;
-  state.log=state.log.slice(0,prev.logLen);updateUI();
+  if(prev.awayPitchLog) state.awayPitchLog=prev.awayPitchLog;
+  if(prev.homePitchLog) state.homePitchLog=prev.homePitchLog;
+  if(prev.awaySlots) state.awaySlots=prev.awaySlots;
+  if(prev.homeSlots) state.homeSlots=prev.homeSlots;
+  state.log=(state.log||[]).slice(0, prev.logLen||0);
+  state.atBatLog=(state.atBatLog||[]).slice(0, prev.atBatLogLen!=null?prev.atBatLogLen:0);
+  state.currentPitches=prev.currentPitches||[];
+  updateUI();
 };
 window.addBall=function(){saveHistory();state.balls++;pushPitch('b','壞球。');if(state.balls>=4){var last=state.currentPitches[state.currentPitches.length-1];if(last){last.kind='r';last.label='壞球。四壞球保送。';}recordResult('BB',true);}else updateUI();};
 window.addStrike=function(){saveHistory();state.strikes++;pushPitch('s','好球。');if(state.strikes>=3){var last=state.currentPitches[state.currentPitches.length-1];if(last){last.kind='r';last.label='好球。三振出局。';}recordResult('K',true);}else updateUI();};
@@ -657,6 +668,12 @@ window.addFoul=function(){saveHistory();if(state.strikes<2)state.strikes++;pushP
   }
 
 window.recordResult=function(type,fromAuto){
+  if(type==='DP'){
+    if(!state.bases[0]&&!state.bases[1]&&!state.bases[2]){
+      alert('壘上無人，無法雙殺');
+      return;
+    }
+  }
   if(!fromAuto)saveHistory();
   var team=currentTeam(),batter=currentBatter();
   if(!batter){alert('找不到目前打者，請重新開始比賽');return;}
