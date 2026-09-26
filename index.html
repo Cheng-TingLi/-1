@@ -673,6 +673,10 @@ window.recordResult=function(type,fromAuto){
       alert('壘上無人，無法雙殺');
       return;
     }
+    if(state.outs>=2){
+      alert('兩人出局時雙殺不成立');
+      return;
+    }
   }
   if(!fromAuto)saveHistory();
   var team=currentTeam(),batter=currentBatter();
