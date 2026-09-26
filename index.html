@@ -754,7 +754,7 @@ window.recordResult=function(type,fromAuto){
       break;
     default:msg='#'+batter.num+' '+batter.name+' '+type;
   }
-  if(isHit)state.hits[team]++;
+  if(isHit){state.hits[team]++; state.lastHitter=batter; state.lastHitterHalf=state.inning+(state.isTop?'上':'下');}
   if(isError)state.errors[team==='away'?'home':'away']++;
   if(runsScored>0)state.runs[team][inn]+=runsScored;
   state.outs+=outsAdded;
@@ -874,63 +874,66 @@ window.steal=function(fromBase){
 window.advanceRunner=function(fromBase,toBase){
   if(!state.bases[fromBase-1]){alert('目前'+fromBase+'壘沒有跑者');return;}
   if(state.bases[toBase-1]){alert(toBase+'壘已有跑者');return;}
-  saveHistory();state.bases[fromBase-1]=false;state.bases[toBase-1]=true;
-  addLog(state.inning+(state.isTop?'上':'下')+'｜'+fromBase+'壘跑者進至'+toBase+'壘');
-  if(state.currentPitches&&state.currentPitches.length){var lp=state.currentPitches[state.currentPitches.length-1];lp.label=(lp.label||'')+' '+(fromBase+'壘跑者進至'+toBase+'壘')+'。';}
-  else{state.currentPitches=state.currentPitches||[];state.currentPitches.push({kind:'e',label:(fromBase+'壘跑者進至'+toBase+'壘')+'。',balls:state.balls,strikes:state.strikes,outs:state.outs});}updateUI();
+  saveHistory();
+  state.bases[fromBase-1]=false;
+  state.bases[toBase-1]=true;
+  pushPlayEvent(fromBase+'壘跑者進至'+toBase+'壘', {noPitch:true});
+  updateUI();
 };
 window.scoreRunner=function(fromBase){
   if(!state.bases[fromBase-1]){alert('目前'+fromBase+'壘沒有跑者');return;}
-  saveHistory();state.bases[fromBase-1]=false;var team=currentTeam(),inn=Math.min(state.inning-1,6);state.runs[team][inn]+=1;
-  addLog(state.inning+(state.isTop?'上':'下')+'｜'+fromBase+'壘跑者回本壘得分');
-  if(state.currentPitches&&state.currentPitches.length){var lp=state.currentPitches[state.currentPitches.length-1];lp.label=(lp.label||'')+' '+(fromBase+'壘跑者回本壘得分')+'。';}
-  else{state.currentPitches=state.currentPitches||[];state.currentPitches.push({kind:'e',label:(fromBase+'壘跑者回本壘得分')+'。',balls:state.balls,strikes:state.strikes,outs:state.outs});}updateUI();
+  saveHistory();
+  state.bases[fromBase-1]=false;
+  var team=currentTeam(),inn=Math.min(state.inning-1,6);
+  state.runs[team][inn]+=1;
+  var half=state.isTop?'上':'下';
+  var msg=fromBase+'壘跑者回本壘得分';
+  // 打點給最近一位打出安打的打者（同一半局）
+  if(state.lastHitter && state.lastHitterHalf===state.inning+half){
+    if(!state.lastHitter.stats) state.lastHitter.stats=emptyStats();
+    state.lastHitter.stats.rbi+=1;
+    msg += '（打點：#'+state.lastHitter.num+' '+state.lastHitter.name+'）';
+  }
+  pushPlayEvent(msg, {noPitch:true});
+  updateUI();
 };
 
 window.wildPitch=function(){
   saveHistory();
-  // 爆投算一顆壞球
   state.balls++;
   var p=ensurePitcherStats(currentPitcher());
-  if(p&&p.pstats){p.pstats.pitches++;p.pstats.wp++;}
+  if(p&&p.pstats){p.pstats.wp++;}
   var scored=0;
   if(state.bases[0]||state.bases[1]||state.bases[2]){
     scored=advanceRunners(1);
     var team=currentTeam(),inn=Math.min(state.inning-1,6);
     if(scored>0){state.runs[team][inn]+=scored;if(p&&p.pstats){p.pstats.r+=scored;p.pstats.er+=scored;}}
   }
-  var half=state.isTop?'上':'下';
-  addLog(state.inning+half+'｜爆投（記壞球）'+(scored>0?'（得'+scored+'分）':''));
   if(state.balls>=4){
-    addLog('　因爆投累積4壞球 → 保送');
-    recordResult('BB', true);
+    pushPlayEvent('暴投（並四壞）', {noPitch:false});
+    recordResult('BB',true);
     return;
   }
-  var baseStr=[];if(state.bases[0])baseStr.push('一壘');if(state.bases[1])baseStr.push('二壘');if(state.bases[2])baseStr.push('三壘');
-  addLog('　目前壘上：'+(baseStr.length?baseStr.join('、'):'無人')+'｜出局：'+state.outs+'｜球數 B'+state.balls+'-S'+state.strikes);
+  var msg='暴投'+(scored>0?('（得'+scored+'分）'):'');
+  pushPlayEvent(msg, {noPitch:true});
   updateUI();
 };
 window.passedBall=function(){
   saveHistory();
-  // 捕逸算一顆壞球
   state.balls++;
-  var p=ensurePitcherStats(currentPitcher());
-  if(p&&p.pstats){p.pstats.pitches++;}
   var scored=0;
   if(state.bases[0]||state.bases[1]||state.bases[2]){
     scored=advanceRunners(1);
     var team=currentTeam(),inn=Math.min(state.inning-1,6);
     if(scored>0)state.runs[team][inn]+=scored;
   }
-  var half=state.isTop?'上':'下';
-  addLog(state.inning+half+'｜捕逸（記壞球）'+(scored>0?'（得'+scored+'分）':''));
   if(state.balls>=4){
-    addLog('　因捕逸累積4壞球 → 保送');
-    recordResult('BB', true);
+    pushPlayEvent('捕逸（並四壞）', {noPitch:false});
+    recordResult('BB',true);
     return;
   }
-  var baseStr=[];if(state.bases[0])baseStr.push('一壘');if(state.bases[1])baseStr.push('二壘');if(state.bases[2])baseStr.push('三壘');
-  addLog('　目前壘上：'+(baseStr.length?baseStr.join('、'):'無人')+'｜出局：'+state.outs+'｜球數 B'+state.balls+'-S'+state.strikes);
+  var msg='捕逸'+(scored>0?('（得'+scored+'分）'):'');
+  pushPlayEvent(msg, {noPitch:true});
   updateUI();
 };
 window.balk=function(){
@@ -938,12 +941,11 @@ window.balk=function(){
   saveHistory();
   var scored=advanceRunners(1);
   var team=currentTeam(),inn=Math.min(state.inning-1,6);
-  if(scored>0){state.runs[team][inn]+=scored;var p=ensurePitcherStats(currentPitcher());if(p&&p.pstats){p.pstats.r+=scored;p.pstats.er+=scored;}}
-  var p2=ensurePitcherStats(currentPitcher());if(p2&&p2.pstats)p2.pstats.bk++;
-  var half=state.isTop?'上':'下';
-  addLog(state.inning+half+'｜投手犯規'+(scored>0?'（得'+scored+'分）':''));
-  var baseStr=[];if(state.bases[0])baseStr.push('一壘');if(state.bases[1])baseStr.push('二壘');if(state.bases[2])baseStr.push('三壘');
-  addLog('　目前壘上：'+(baseStr.length?baseStr.join('、'):'無人')+'｜出局：'+state.outs);
+  var p=ensurePitcherStats(currentPitcher());
+  if(scored>0){state.runs[team][inn]+=scored;if(p&&p.pstats){p.pstats.r+=scored;p.pstats.er+=scored;}}
+  if(p&&p.pstats)p.pstats.bk++;
+  var msg='投手犯規'+(scored>0?('（得'+scored+'分）'):'（全員推進）');
+  pushPlayEvent(msg, {noPitch:true});
   updateUI();
 };
 window.advanceAllOne=function(){
@@ -951,9 +953,16 @@ window.advanceAllOne=function(){
   saveHistory();
   var scored=advanceRunners(1);
   var team=currentTeam(),inn=Math.min(state.inning-1,6);
-  if(scored>0)state.runs[team][inn]+=scored;
   var half=state.isTop?'上':'下';
-  addLog(state.inning+half+'｜全員推進1壘'+(scored>0?'（得'+scored+'分）':''));
+  if(scored>0){
+    state.runs[team][inn]+=scored;
+    if(state.lastHitter && state.lastHitterHalf===state.inning+half){
+      if(!state.lastHitter.stats) state.lastHitter.stats=emptyStats();
+      state.lastHitter.stats.rbi+=scored;
+    }
+  }
+  var msg='全員推進1壘'+(scored>0?('（得'+scored+'分'+(state.lastHitter?'，打點：#'+state.lastHitter.num+' '+state.lastHitter.name:'')+'）'):'');
+  pushPlayEvent(msg, {noPitch:true});
   updateUI();
 };
 window.clearBases=function(){saveHistory();state.bases=[false,false,false];addLog('清壘');updateUI();};
@@ -973,6 +982,7 @@ window.changePitcherByNumber=function(){
   addLog('投手更換 → #'+found.num+' '+found.name);document.getElementById('newPitcherNum').value='';updateUI();
 };
 window.nextHalfInning=function(auto){
+  state.lastHitter=null; state.lastHitterHalf=null;
   if(!auto)saveHistory();
   var prevInning=state.inning, prevHalf=state.isTop?'上':'下';
   if(!auto){
@@ -1095,6 +1105,27 @@ function renderPitchStats(){
   body.innerHTML = block('away') + block('home');
 };
 function totalRuns(team){var t=0;for(var i=0;i<state.runs[team].length;i++)t+=state.runs[team][i];return t;}
+
+function pushPlayEvent(summary, opts){
+  opts = opts || {};
+  var half = state.isTop ? '上' : '下';
+  state.atBatLog = state.atBatLog || [];
+  state.atBatLog.push({
+    inning: state.inning,
+    half: half,
+    batter: opts.batter || '場上事件',
+    pitcher: opts.pitcher || '',
+    pitches: [],
+    summary: summary,
+    pitchCount: 0,
+    noPitch: !!opts.noPitch,
+    isRunnerOut: !!opts.isRunnerOut,
+    isEvent: true
+  });
+  if(state.atBatLog.length>60) state.atBatLog.shift();
+  addLog(state.inning+half+'｜'+summary);
+}
+
 function addLog(text){state.log.push(text);if(state.log.length>100)state.log.shift();}
 function renderStats(){
   var body=document.getElementById('statsBody');
