@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>棒球記分軟體｜1～7局</title>
+  <title><!-- v20260926-ksafe -->棒球記分軟體｜1～7局</title>
   <style>
     :root {
       --bg: #0f172a; --card: #1e293b; --accent: #22c55e; --accent2: #3b82f6;
@@ -110,7 +110,7 @@
     .runner-controls h4 { font-size: 14px; color: var(--muted); margin-bottom: 6px; text-align: center; }
     .runner-btn-row { display: flex; flex-direction: column; gap: 5px; }
     .runner-btn-row button { background: #334155; color: white; padding: 6px 6px; font-size: 12px; text-align: left; }
-    .runner-btn-row button.steal { background: #1e3a5f; }
+    .runner-btn-row button.steal { background: #FF5722; color: #fff; }
 
     .runner-btn-row button.btn-score {
       background: #00ff80 !important;
@@ -129,14 +129,34 @@
     .btn-result.hit { background: #166534; }
     .btn-result.out { background: #7f1d1d; }
     .btn-result.special { background: #1e3a5f; }
+    .btn-result.yellow { background: #FFD306; color: #1a1a1a; }
     .results-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 6px; }
     @media (max-width: 480px) { .results-grid { grid-template-columns: repeat(3, 1fr); } }
     .custom-result { display: flex; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
     .custom-result input { flex: 1; min-width: 150px; font-size: 15px; }
     .custom-result button { background: #7c3aed; color: white; padding: 12px 14px; font-size: 15px; }
-    .log-panel { background: var(--card); border-radius: 10px; padding: 10px; max-height: 320px; overflow-y: auto; font-size: 14px; margin-bottom: 6px; }
+    .log-panel { background: var(--card); border-radius: 10px; padding: 12px; max-height: 420px; overflow-y: auto; font-size: 14px; margin-bottom: 6px; line-height: 1.55; }
+    .atbat-card {
+      padding: 10px 8px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #334155;
+      line-height: 1.55;
+    }
+    .atbat-card .atbat-head {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 8px; flex-wrap: wrap;
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+    .atbat-card .atbat-sum {
+      line-height: 1.6;
+      margin-top: 4px;
+      padding: 2px 0;
+    }
     .log-panel h3 { margin-bottom: 6px; font-size: 15px; color: var(--muted); }
-    .log-entry { padding: 4px 0; border-bottom: 1px solid #1e293b; }
+    .log-half { color: #CE0000 !important; font-weight: 700; font-size: 14px; padding: 10px 0 8px; margin-top: 6px; line-height: 1.6; }
+    .log-half-end { color: #CE0000 !important; font-weight: 700; font-size: 14px; text-decoration: line-through; border-bottom: 2px solid #CE0000; padding: 10px 0 12px; margin: 8px 0 12px; line-height: 1.6; }
+    .log-entry { padding: 8px 0; border-bottom: 1px solid #1e293b; line-height: 1.55; margin-bottom: 2px; }
     .controls { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 6px; }
     .btn-ctrl { background: #475569; color: white; padding: 9px 12px; font-size: 14px; }
     .btn-ctrl.danger { background: var(--danger); }
@@ -349,18 +369,17 @@
       <button type="button" class="btn-result hit" onclick="recordResult('2B')">二壘安打</button>
       <button type="button" class="btn-result hit" onclick="recordResult('3B')">三壘安打</button>
       <button type="button" class="btn-result hit" onclick="recordResult('HR')">全壘打</button>
-      <button type="button" class="btn-result special" onclick="recordResult('BB')">四壞球</button>
-      <button type="button" class="btn-result special" onclick="recordResult('HBP')">觸身球</button>
-      <button type="button" class="btn-result special" onclick="recordResult('IBB')">故意四壞</button>
-      <button type="button" class="btn-result out" onclick="recordResult('K')">三振</button>
+      <button type="button" class="btn-result yellow" onclick="recordResult('HBP')">觸身球</button>
+      <button type="button" class="btn-result yellow" onclick="recordResult('IBB')">故意四壞</button>
       <button type="button" class="btn-result out" onclick="recordResult('GO')">滾地球出局</button>
       <button type="button" class="btn-result out" onclick="recordResult('FO')">飛球出局</button>
       <button type="button" class="btn-result out" onclick="recordResult('LO')">平飛出局</button>
       <button type="button" class="btn-result out" onclick="recordResult('FC')">野選</button>
-      <button type="button" class="btn-result special" onclick="recordResult('E')">失誤</button>
-      <button type="button" class="btn-result special" onclick="recordResult('SF')">犧牲飛球</button>
-      <button type="button" class="btn-result special" onclick="recordResult('SH')">犧牲觸擊</button>
       <button type="button" class="btn-result out" onclick="recordResult('DP')">雙殺</button>
+      <button type="button" class="btn-result out" onclick="recordResult('KSAFE')">不死三振</button>
+      <button type="button" class="btn-result yellow" onclick="recordResult('E')">失誤</button>
+      <button type="button" class="btn-result yellow" onclick="recordResult('SF')">犧牲飛球</button>
+      <button type="button" class="btn-result yellow" onclick="recordResult('SH')">犧牲觸擊</button>
     </div>
     <div class="custom-result">
       <input type="text" id="customResultInput" placeholder="其他結果…">
@@ -392,7 +411,7 @@
         <p style="font-size:12px;color:#94a3b8;margin-bottom:4px;">存檔內容（手機請長按全選複製，或貼上後按「從文字還原」）</p>
         <textarea id="saveTextBox" style="width:100%;height:100px;font-size:11px;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:6px;padding:6px;"></textarea>
       </div>
-      <p class="footer-note" style="margin-top:6px;">本機存檔｜手機若無法下載請用「複製文字」貼到備忘錄</p>
+      <p class="footer-note" style="margin-top:6px;">存檔內容為整場比賽文字紀錄（逐球經過、比分、成績）｜非程式碼</p>
     </div>
         <div id="lineupBoxPanel" class="lineup-box-panel hidden">
       <h3 id="lineupBoxTitle">打線／守備</h3>
@@ -476,8 +495,8 @@ function flushAtBat(summary){
     summary: summary || '',
     pitchCount: state.currentPitches.length
   };
-  state.atBatLog.unshift(entry);
-  if(state.atBatLog.length>40) state.atBatLog.pop();
+  state.atBatLog.push(entry);
+  if(state.atBatLog.length>40) state.atBatLog.shift();
   state.currentPitches=[];
 }
 
@@ -567,6 +586,7 @@ var awayPNum=(document.getElementById('awayPitcherNum').value||'').trim();
   
   updateUI();
   addLog('比賽開始｜'+state.awayName+' vs '+state.homeName);
+  addLog('━━━ 1上 開始（客場進攻）━━━');
   addLog('先發投手：'+state.awayName+' #'+state.awayPitcher.num+' '+state.awayPitcher.name+' ／ '+state.homeName+' #'+state.homePitcher.num+' '+state.homePitcher.name);
 };
 function currentTeam(){return state.isTop?'away':'home';}
@@ -610,7 +630,7 @@ window.addFoul=function(){saveHistory();if(state.strikes<2)state.strikes++;pushP
     if(type==='BB')ps.bb++;
     if(type==='IBB'){ps.bb++;ps.ibb++;}
     if(type==='HBP')ps.hbp++;
-    if(type==='K')ps.so++;
+    if(type==='K'||type==='KSAFE')ps.so++;
     ps.outs+=outsAdded;
     if(runsScored>0){ps.r+=runsScored;ps.er+=runsScored;}
     // 本打席投球數／好球數一次加總（避免漏計）
@@ -621,9 +641,18 @@ window.addFoul=function(){saveHistory();if(state.strikes<2)state.strikes++;pushP
     var strikes=0;
     for(var i=0;i<pitches.length;i++){
       var k=pitches[i].kind;
-      if(k==='s'||k==='f'||(k==='r'&&type==='K')) strikes++;
+      // 好球、界外、結果球（打進場／三振）都記好球
+      if(k==='s'||k==='f'||k==='r') strikes++;
     }
-    if(type==='K' && strikes===0) strikes=1;
+    if(strikes===0) strikes=1; // 至少結果一球算好球
+    // 保送／觸身不算打者揮空好球：BB/IBB/HBP 的最後結果球不記好球
+    if(type==='BB'||type==='IBB'||type==='HBP'){
+      strikes=0;
+      for(var j=0;j<pitches.length;j++){
+        var k2=pitches[j].kind;
+        if(k2==='s'||k2==='f') strikes++;
+      }
+    }
     ps.strikes += strikes;
   }
 
@@ -648,6 +677,21 @@ window.recordResult=function(type,fromAuto){
       s.rbi+=runsScored;
       msg='#'+batter.num+' '+batter.name+' '+(type==='HBP'?'觸身球':type==='IBB'?'故意四壞':'四壞球');break;
     case'K':outsAdded=1;s.ab++;s.so++;msg='#'+batter.num+' '+batter.name+' 三振出局';break;
+    case'KSAFE':
+      // 不死三振：記三振／打數，上壘率不增加，出局燈不亮（outs 不增加），上到一壘
+      outsAdded=0;
+      s.ab++; s.so++;
+      // 一壘有人則推進（簡化：一壘跑者進二壘，打者上一壘）
+      if(state.bases[0]){
+        if(state.bases[1]){
+          if(state.bases[2]){ /* bases loaded - 簡化得分 */ var team=currentTeam(); var inn=Math.min(state.inning-1,6); state.runs[team][inn]+=1; s.rbi+=1; }
+          else state.bases[2]=true;
+          state.bases[1]=true;
+        } else state.bases[1]=true;
+      }
+      state.bases[0]=true;
+      msg='#'+batter.num+' '+batter.name+' 不死三振（上到一壘，記三振）';
+      break;
     case'GO':case'FO':case'LO':outsAdded=1;s.ab++;msg='#'+batter.num+' '+batter.name+' '+(type==='GO'?'滾地球':type==='FO'?'飛球':'平飛')+'出局';break;
     case'FC':outsAdded=1;s.ab++;if(state.outs+1<3)state.bases=[true,state.bases[1],state.bases[2]];msg='#'+batter.num+' '+batter.name+' 野選';break;
     case'E':isError=true;if(!state.bases[0])state.bases[0]=true;else if(!state.bases[1])state.bases[1]=true;else if(!state.bases[2])state.bases[2]=true;else runsScored=1;s.ab++;msg='#'+batter.num+' '+batter.name+' 因失誤上壘';break;
@@ -682,7 +726,7 @@ window.recordResult=function(type,fromAuto){
   setCurrentBatterIdx(currentBatterIdx()+1);
   // 確保畫面一定更新
   try {
-    if(state.outs>=3){addLog('─── '+state.inning+half+' 結束（3出局）───');nextHalfInning(true);}
+    if(state.outs>=3){addLog('─── 結束'+state.inning+half+' ───');nextHalfInning(true);}
     else updateUI();
   } catch(e) {
     console.error(e);
@@ -695,9 +739,40 @@ window.recordCustomResult=function(){
   saveHistory();
   var batter=currentBatter();
   if(!batter){alert('找不到目前打者');return;}
+  if(!batter.stats) batter.stats=emptyStats();
   var half=state.isTop?'上':'下';
-  addLog(state.inning+half+'｜#'+batter.num+' '+batter.name+' '+text);
-  state.balls=0;state.strikes=0;setCurrentBatterIdx(currentBatterIdx()+1);input.value='';updateUI();
+  var endBalls=state.balls, endStrikes=state.strikes, endOuts=state.outs;
+  // 把過程寫入目前打席逐球
+  pushPitch('r', text+'。');
+  var summary = '#'+batter.num+' '+batter.name+' '+text+'｜B'+endBalls+'-S'+endStrikes+'｜'+(state.currentPitches.length)+'球｜出局'+endOuts;
+  addLog(state.inning+half+'｜'+summary);
+  flushAtBat(summary);
+  // 簡易判斷：含出局則出局+1，含安打則記安打（可再手動改成績）
+  var t=text;
+  if(t.indexOf('出局')>=0||t.indexOf('三振')>=0||t.indexOf('飛球')>=0||t.indexOf('滾地')>=0||t.indexOf('刺殺')>=0){
+    state.outs++;
+    batter.stats.ab++;
+    applyPitcherResult('OUT',0,1,false);
+  } else if(t.indexOf('安打')>=0||t.indexOf('一壘')>=0||t.indexOf('二壘')>=0||t.indexOf('三壘')>=0||t.indexOf('全壘')>=0){
+    batter.stats.ab++; batter.stats.h++;
+    if(t.indexOf('二壘')>=0) batter.stats.doubles++;
+    if(t.indexOf('三壘')>=0) batter.stats.triples++;
+    if(t.indexOf('全壘')>=0){ batter.stats.hr++; }
+    state.hits[currentTeam()]++;
+    applyPitcherResult('1B',0,0,true);
+  } else {
+    applyPitcherResult('OUT',0,0,false);
+  }
+  state.balls=0; state.strikes=0;
+  if(state.outs>=3){
+    addLog('─── 結束'+state.inning+half+' ───');
+    setCurrentBatterIdx(currentBatterIdx()+1);
+    nextHalfInning(true);
+  } else {
+    setCurrentBatterIdx(currentBatterIdx()+1);
+    updateUI();
+  }
+  input.value='';
 };
 function advanceRunners(basesToAdvance){
   var scored=0;
@@ -844,11 +919,24 @@ window.changePitcherByNumber=function(){
   addLog('投手更換 → #'+found.num+' '+found.name);document.getElementById('newPitcherNum').value='';updateUI();
 };
 window.nextHalfInning=function(auto){
-  if(!auto)saveHistory();var prevInning=state.inning;state.outs=0;state.balls=0;state.strikes=0;state.bases=[false,false,false];state.currentPitches=[];
-  if(state.isTop){state.isTop=false;if(!auto)addLog('─── 手動換至 '+prevInning+'下 ───');}
-  else{state.isTop=true;state.inning++;if(!auto)addLog('─── 手動換至 '+state.inning+'上 ───');if(state.inning>7)addLog('═══ 已超過 7 局（可繼續延長）═══');}
+  if(!auto)saveHistory();
+  var prevInning=state.inning, prevHalf=state.isTop?'上':'下';
+  if(!auto){
+    addLog('─── 結束'+prevInning+prevHalf+' ───');
+  }
+  state.outs=0;state.balls=0;state.strikes=0;state.bases=[false,false,false];state.currentPitches=[];
+  if(state.isTop){
+    state.isTop=false;
+    addLog('━━━ '+prevInning+'下 開始（主場進攻）━━━');
+  } else {
+    state.isTop=true; state.inning++;
+    addLog('━━━ '+state.inning+'上 開始（客場進攻）━━━');
+    if(state.inning>7) addLog('═══ 已超過 7 局（可繼續延長）═══');
+  }
   updateUI();
 };
+
+
 window.endGame=function(){
   if(confirm('確定結束比賽？')){addLog('═══ 比賽結束 ═══');state.statsVisible=true;document.getElementById('statsPanel').classList.remove('hidden');var pp=document.getElementById('pitchStatsPanel');if(pp)pp.classList.remove('hidden');updateUI();
     alert('最終比數\n'+state.awayName+' '+totalRuns('away')+' - '+totalRuns('home')+' '+state.homeName);}
@@ -953,7 +1041,7 @@ function renderPitchStats(){
   body.innerHTML = block('away') + block('home');
 };
 function totalRuns(team){var t=0;for(var i=0;i<state.runs[team].length;i++)t+=state.runs[team][i];return t;}
-function addLog(text){state.log.unshift(text);if(state.log.length>100)state.log.pop();}
+function addLog(text){state.log.push(text);if(state.log.length>100)state.log.shift();}
 function renderStats(){
   var body=document.getElementById('statsBody');
   if(!body) return;
@@ -1075,6 +1163,7 @@ window.saveGame=function(){
   try {
     if(document.getElementById('game').classList.contains('hidden')){ alert('請先開始比賽再存檔'); return; }
     var snap = snapshotState();
+    snap.reportText = buildGameReport();
     var list = getSaves();
     list.unshift(snap);
     if(list.length>20) list = list.slice(0,20);
@@ -1091,49 +1180,46 @@ window.saveGame=function(){
 window.downloadSave=function(){
   try {
     if(document.getElementById('game').classList.contains('hidden')){ alert('請先開始比賽'); return; }
+    var report = buildGameReport();
     var snap = snapshotState();
-    var json = JSON.stringify(snap, null, 2);
-    // 手機常無法直接下載，改顯示可複製內容
+    snap.reportText = report;
+    // 可讀比賽紀錄（主要下載）
+    var blob = new Blob([report], {type:'text/plain;charset=utf-8'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '比賽紀錄_'+(state.awayName||'客')+'vs'+(state.homeName||'主')+'_'+Date.now()+'.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 500);
+    // 文字框顯示可複製
     var box = document.getElementById('saveTextBox');
     if(box){
-      box.value = json;
-      box.parentElement.classList.remove('hidden');
+      box.value = report;
+      var wrap = document.getElementById('saveTextAreaWrap');
+      if(wrap) wrap.classList.remove('hidden');
       box.focus();
       box.select();
     }
-    // 嘗試下載（電腦有效）
-    try {
-      var blob = new Blob([json], {type:'application/json'});
-      var a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'baseball-save.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 500);
-    } catch(e2){}
-    // 嘗試分享 API（部分手機）
-    if(navigator.share){
-      try {
-        var file = new File([json], 'baseball-save.json', {type:'application/json'});
-        if(navigator.canShare && navigator.canShare({files:[file]})){
-          navigator.share({files:[file], title:'棒球記分存檔'});
-        }
-      } catch(e3){}
-    }
-    alert('若沒有自動下載，請在下方文字框長按「全選→複製」存到備忘錄或傳給自己');
+    alert('已匯出比賽紀錄文字檔（含逐球經過）\\n手機請在下方文字框長按複製');
   } catch(e){
     alert('匯出失敗：'+e.message);
   }
 };
 window.copySaveText=function(){
   var box=document.getElementById('saveTextBox');
-  if(!box||!box.value){ alert('沒有可複製的內容，請先按「下載／複製存檔」'); return; }
+  if(!box){ alert('找不到文字框'); return; }
+  if(!box.value){
+    try { box.value = buildGameReport(); } catch(e){}
+  }
+  if(!box.value){ alert('沒有可複製的內容'); return; }
+  var wrap=document.getElementById('saveTextAreaWrap');
+  if(wrap) wrap.classList.remove('hidden');
   box.select();
   box.setSelectionRange(0, box.value.length);
   try {
     if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(box.value).then(function(){ alert('已複製到剪貼簿'); });
+      navigator.clipboard.writeText(box.value).then(function(){ alert('已複製比賽紀錄文字'); });
     } else {
       document.execCommand('copy');
       alert('已複製（若失敗請手動長按全選）');
@@ -1360,17 +1446,25 @@ function runnerOut(base, reason){
   state.bases[base-1]=false;
   state.outs += 1;
   var half=state.isTop?'上':'下';
-  var team=currentTeam();
-  addLog(state.inning+half+'｜'+base+'壘跑者'+reason+'出局（出局數 '+state.outs+'）');
-  // 不推進打者棒次：打席未完成
+  var msg = base+'壘跑者'+reason+'出局（出局數 '+state.outs+'）';
+  // 牽制／觸殺不計投球數，只寫事件
+  addLog(state.inning+half+'｜'+msg);
+  state.atBatLog = state.atBatLog || [];
+  state.atBatLog.push({
+    inning: state.inning, half: half,
+    batter: '跑壘事件', pitcher: '',
+    pitches: [], summary: msg, pitchCount: 0,
+    isRunnerOut: true, noPitch: true
+  });
+  if(state.atBatLog.length>40) state.atBatLog.shift();
   if(state.outs >= 3){
-    addLog('─── '+state.inning+half+' 結束（'+reason+'，打者打席未完成，下次回攻同一人）───');
-    // 不清 currentPitches，棒次不 +1
+    addLog('─── 結束'+state.inning+half+' ───');
     nextHalfInning(true);
   } else {
     updateUI();
   }
 }
+
 window.pickoff=function(base){ runnerOut(base, '牽制'); };
 window.tagOut=function(base){ runnerOut(base, '觸殺'); };
 
@@ -1439,19 +1533,69 @@ function updateUI(){
 
     // 紀錄
     var logHtml='';
-    for(var L=0;L<(state.atBatLog||[]).length;L++){
-      var abat=state.atBatLog[L];
-      logHtml+='<div class="atbat-card">';
-      logHtml+='<div class="atbat-head"><span>'+abat.batter+' vs '+abat.pitcher+'</span>';
-      logHtml+='<span style="font-size:12px;color:#94a3b8">'+abat.inning+abat.half+(abat.pitchCount?(' · '+abat.pitchCount+'球'):'')+'</span></div>';
-      logHtml+='<div class="atbat-sum" style="color:#f1f5f9;font-size:14px;font-weight:600;">'+abat.summary+'</div>';
-      logHtml+='</div>';
-    }
-    for(var M=0;M<Math.min((state.log||[]).length,20);M++){
-      var line=state.log[M];
-      if(line.indexOf('更換')>=0||line.indexOf('───')>=0||line.indexOf('比賽')>=0||line.indexOf('爆投')>=0||line.indexOf('捕逸')>=0||line.indexOf('犯規')>=0||line.indexOf('盜')>=0||line.indexOf('進壘')>=0||line.indexOf('目前壘上')>=0||line.indexOf('得分')>=0||line.indexOf('牽制')>=0||line.indexOf('觸殺')>=0||line.indexOf('代打')>=0||line.indexOf('守備')>=0)
-        logHtml+='<div class="log-entry">'+line+'</div>';
-    }
+    // 由上往下：依半局分段（1上 → 結束1上 → 1下 → …）
+    (function(){
+      var abs = state.atBatLog || [];
+      var halves = [];
+      var keyMap = {};
+      function halfKey(inn, half){ return inn + half; }
+      function ensureHalf(inn, half){
+        var k = halfKey(inn, half);
+        if(!keyMap[k]){
+          keyMap[k] = {inning:inn, half:half, atBats:[], events:[]};
+          halves.push(keyMap[k]);
+        }
+        return keyMap[k];
+      }
+      for(var i=0;i<abs.length;i++){
+        var ab = abs[i];
+        var h = ensureHalf(ab.inning, ab.half);
+        h.atBats.push(ab);
+      }
+      // 目前進行中的半局也要有標題
+      ensureHalf(state.inning, state.isTop?'上':'下');
+      // 依局數排序
+      halves.sort(function(a,b){
+        if(a.inning!==b.inning) return a.inning-b.inning;
+        if(a.half===b.half) return 0;
+        return a.half==='上'?-1:1;
+      });
+      var curKey = state.inning + (state.isTop?'上':'下');
+      for(var hi=0; hi<halves.length; hi++){
+        var H = halves[hi];
+        var label = H.inning + H.half;
+        var side = H.half==='上' ? '客場進攻' : '主場進攻';
+        logHtml += '<div class="log-entry log-half">━━━ '+label+' 開始（'+side+'）━━━</div>';
+        for(var ai=0; ai<H.atBats.length; ai++){
+          var abat = H.atBats[ai];
+          var noPitch = abat.noPitch || abat.isRunnerOut;
+          logHtml += '<div class="atbat-card">';
+          if(noPitch){
+            logHtml += '<div class="atbat-sum" style="color:#fbbf24;font-size:14px;">'+abat.summary+' <span style="color:#94a3b8;font-size:12px;">（不計球）</span></div>';
+          } else {
+            logHtml += '<div class="atbat-head"><span>'+abat.batter+(abat.pitcher?(' vs '+abat.pitcher):'')+'</span>';
+            logHtml += '<span style="font-size:12px;color:#94a3b8">'+(abat.pitchCount?(' '+abat.pitchCount+'球'):'')+'</span></div>';
+            logHtml += '<div class="atbat-sum" style="color:#f1f5f9;font-size:14px;font-weight:600;">'+abat.summary+'</div>';
+          }
+          logHtml += '</div>';
+        }
+        // 已結束的半局顯示結束線；進行中不顯示結束
+        var thisKey = H.inning + H.half;
+        if(thisKey !== curKey){
+          logHtml += '<div class="log-entry log-half-end">─── 結束'+label+' ───</div>';
+        } else {
+          logHtml += '<div class="log-entry" style="color:#94a3b8;font-size:12px;">（進行中）</div>';
+        }
+      }
+      // 其他重要訊息（換人等）附在最後
+      for(var M=0;M<(state.log||[]).length;M++){
+        var line=state.log[M];
+        if(line.indexOf('更換')>=0||line.indexOf('代打')>=0||line.indexOf('守備')>=0||line.indexOf('比賽開始')>=0){
+          if(line.indexOf('━━━')<0 && line.indexOf('結束')<0)
+            logHtml+='<div class="log-entry">'+line+'</div>';
+        }
+      }
+    })();
     var playLog=document.getElementById('playLog');
     if(playLog) playLog.innerHTML=logHtml;
 
@@ -1746,6 +1890,107 @@ window.changeStarterPos=function(teamKey, idx, pos){
   addLog((idx+1)+'棒先發守備 → '+pos+'（#'+slots[idx][0].num+' '+slots[idx][0].name+'）');
   updateUI();
 };
+
+
+function buildGameReport(){
+  var lines = [];
+  lines.push('══════════════════════════════════');
+  lines.push('棒球比賽紀錄');
+  lines.push(state.awayName + ' vs ' + state.homeName);
+  lines.push('局數：' + state.inning + (state.isTop?'上':'下') + '　比分：' + totalRuns('away') + ' - ' + totalRuns('home'));
+  lines.push('安打：客' + state.hits.away + ' / 主' + state.hits.home + '　失誤：客' + state.errors.away + ' / 主' + state.errors.home);
+  lines.push('══════════════════════════════════');
+  lines.push('');
+  lines.push('【局數得分】');
+  var hdr = '隊伍';
+  for(var i=1;i<=7;i++) hdr += '\t'+i;
+  hdr += '\tR\tH\tE';
+  lines.push(hdr);
+  var awayLine = state.awayName;
+  for(var a=0;a<7;a++) awayLine += '\t' + (state.runs.away[a]||0);
+  awayLine += '\t'+totalRuns('away')+'\t'+state.hits.away+'\t'+state.errors.away;
+  lines.push(awayLine);
+  var homeLine = state.homeName;
+  for(var h=0;h<7;h++) homeLine += '\t' + (state.runs.home[h]||0);
+  homeLine += '\t'+totalRuns('home')+'\t'+state.hits.home+'\t'+state.errors.home;
+  lines.push(homeLine);
+  lines.push('');
+  lines.push('【逐球／打席經過】');
+  lines.push('──────────────────────────────────');
+
+  var abs = state.atBatLog || [];
+  var halves = [];
+  var keyMap = {};
+  function ensureHalf(inn, half){
+    var k = inn + half;
+    if(!keyMap[k]){ keyMap[k]={inning:inn,half:half,atBats:[]}; halves.push(keyMap[k]); }
+    return keyMap[k];
+  }
+  for(var i=0;i<abs.length;i++){
+    ensureHalf(abs[i].inning, abs[i].half).atBats.push(abs[i]);
+  }
+  halves.sort(function(a,b){
+    if(a.inning!==b.inning) return a.inning-b.inning;
+    return a.half==='上'?-1:1;
+  });
+  for(var hi=0; hi<halves.length; hi++){
+    var H = halves[hi];
+    var label = H.inning + H.half;
+    var side = H.half==='上' ? '客場進攻' : '主場進攻';
+    lines.push('');
+    lines.push('━━━ '+label+' 開始（'+side+'）━━━');
+    for(var ai=0; ai<H.atBats.length; ai++){
+      var ab = H.atBats[ai];
+      if(ab.noPitch || ab.isRunnerOut){
+        lines.push('  ◆ '+ab.summary+'（不計球）');
+      } else {
+        lines.push('  '+ab.batter+(ab.pitcher?(' vs '+ab.pitcher):'')+(ab.pitchCount?('　'+ab.pitchCount+'球'):''));
+        lines.push('    → '+ab.summary);
+      }
+    }
+    var curKey = state.inning + (state.isTop?'上':'下');
+    if(label !== curKey) lines.push('─── 結束'+label+' ───');
+    else lines.push('（進行中）');
+  }
+  lines.push('');
+  lines.push('【其他紀錄】');
+  for(var L=0;L<(state.log||[]).length;L++){
+    var line = state.log[L];
+    if(line.indexOf('━━━')>=0||line.indexOf('結束')>=0) continue;
+    lines.push(line);
+  }
+  lines.push('');
+  lines.push('【打者成績】');
+  function dumpBatters(teamKey){
+    var lineup = teamKey==='away'?state.awayLineup:state.homeLineup;
+    var name = teamKey==='away'?state.awayName:state.homeName;
+    lines.push('─ '+name+' ─');
+    for(var i=0;i<lineup.length;i++){
+      var p=lineup[i], s=p.stats||emptyStats();
+      lines.push((i+1)+'棒 #'+p.num+' '+p.name+'('+p.pos+') AVG'+avg(s)+' AB'+s.ab+' H'+s.h+' RBI'+s.rbi+' BB'+s.bb+' SO'+s.so);
+    }
+  }
+  dumpBatters('away');
+  dumpBatters('home');
+  lines.push('');
+  lines.push('【投手成績】');
+  function dumpPitch(teamKey){
+    var log = teamKey==='away'?state.awayPitchLog:state.homePitchLog;
+    var name = teamKey==='away'?state.awayName:state.homeName;
+    lines.push('─ '+name+' ─');
+    if(!log||!log.length){ lines.push('（無）'); return; }
+    for(var i=0;i<log.length;i++){
+      var p=log[i], ps=p.pstats||emptyPitchStats();
+      lines.push('#'+p.num+' '+p.name+' IP'+fmtIP(ps.outs)+' ERA'+era(ps)+' 球數'+ps.pitches+' 好球'+ps.strikes+' H'+ps.h+' BB'+ps.bb+' SO'+ps.so+' 失分'+ps.r);
+    }
+  }
+  dumpPitch('away');
+  dumpPitch('home');
+  lines.push('');
+  lines.push('存檔時間：'+ new Date().toLocaleString());
+  lines.push('══════════════════════════════════');
+  return lines.join('\n');
+}
 
 window.resetToSetup=function(){
   try {
