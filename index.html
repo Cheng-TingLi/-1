@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta property="og:title" content="棒球記分軟體｜1～7局">
+  <meta property="og:description" content="宜蘭大學棒球隊｜點擊輸入好壞球與打席結果">
+  <meta property="og:image" content="https://cheng-tingli.github.io/-1/team-photo.jpg">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://cheng-tingli.github.io/-1/team-photo.jpg">
   <title><!-- v20260926-ksafe -->棒球記分軟體｜1～7局</title>
   <style>
     :root {
@@ -10,6 +16,19 @@
       --danger: #ef4444; --warning: #f59e0b; --text: #f1f5f9; --muted: #94a3b8; --border: #334155;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    .site-hero {
+      width: 100%; border-radius: 12px; overflow: hidden;
+      margin-bottom: 12px; border: 1px solid var(--border);
+      background: #0f172a;
+    }
+    .site-hero img {
+      width: 100%; height: auto; display: block;
+      max-height: 220px; object-fit: cover; object-position: center 30%;
+    }
+    .site-hero-caption {
+      text-align: center; font-size: 13px; color: var(--muted);
+      padding: 6px 8px 8px; background: var(--card);
+    }
     body {
       font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", sans-serif;
       background: var(--bg); color: var(--text); min-height: 100vh; padding: 8px;
@@ -221,6 +240,10 @@
 </head>
 <body>
   <div id="setup">
+    <div class="site-hero">
+      <img src="team-photo.jpg" alt="宜蘭大學棒球隊" onerror="this.parentElement.style.display='none'">
+      <div class="site-hero-caption">宜蘭大學棒球隊｜棒球記分軟體</div>
+    </div>
     <h1>⚾ 棒球記分軟體</h1>
     <p class="subtitle">1～7 局｜點擊輸入好壞球與打席結果｜職棒規則</p>
     <div class="team-row">
