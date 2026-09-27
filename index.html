@@ -785,10 +785,9 @@ window.recordResult=function(type,fromAuto){
   if(isError)state.errors[team==='away'?'home':'away']++;
   if(runsScored>0)state.runs[team][inn]+=runsScored;
   state.outs+=outsAdded;
-  applyPitcherResult(type, runsScored, outsAdded, isHit);
   var half=state.isTop?'上':'下';
   addLog(state.inning+half+'｜'+msg+(runsScored>0?'（得'+runsScored+'分）':''));
-  // 若本打席還沒有結果球，補一筆（用打席結束前的球數）
+  // 先補上結果球，再累計投手球數／好球（打進場算好球）
   if(!state.currentPitches.length || state.currentPitches[state.currentPitches.length-1].kind!=='r'){
     state.currentPitches.push({kind:'r', label:msg+(runsScored>0?'（得'+runsScored+'分）':''), balls:endBalls, strikes:endStrikes, outs:endOuts+outsAdded});
   } else {
@@ -796,6 +795,7 @@ window.recordResult=function(type,fromAuto){
     last.label = msg + (runsScored>0?'（得'+runsScored+'分）':'');
     last.outs = endOuts+outsAdded;
   }
+  applyPitcherResult(type, runsScored, outsAdded, isHit);
   var pitchN=(state.currentPitches||[]).length;
   flushAtBat(msg + (runsScored>0?'（得'+runsScored+'分）':'') + '｜B'+endBalls+'-S'+endStrikes+'｜'+pitchN+'球｜出局'+state.outs);
   // 顯示目前壘上與出局
@@ -823,28 +823,26 @@ window.recordCustomResult=function(){
   if(!batter.stats) batter.stats=emptyStats();
   var half=state.isTop?'上':'下';
   var endBalls=state.balls, endStrikes=state.strikes, endOuts=state.outs;
-  // 把過程寫入目前打席逐球
   pushPitch('r', text+'。');
-  var summary = '#'+batter.num+' '+batter.name+' '+text+'｜B'+endBalls+'-S'+endStrikes+'｜'+(state.currentPitches.length)+'球｜出局'+endOuts;
+  var pitchN=state.currentPitches.length;
+  var summary = '#'+batter.num+' '+batter.name+' '+text+'｜B'+endBalls+'-S'+endStrikes+'｜'+pitchN+'球｜出局'+endOuts;
   addLog(state.inning+half+'｜'+summary);
-  flushAtBat(summary);
-  // 簡易判斷：含出局則出局+1，含安打則記安打（可再手動改成績）
   var t=text;
+  var type='OUT', runsScored=0, outsAdded=0, isHit=false;
   if(t.indexOf('出局')>=0||t.indexOf('三振')>=0||t.indexOf('飛球')>=0||t.indexOf('滾地')>=0||t.indexOf('刺殺')>=0){
-    state.outs++;
-    batter.stats.ab++;
-    applyPitcherResult('OUT',0,1,false);
+    outsAdded=1; batter.stats.ab++; type='OUT';
   } else if(t.indexOf('安打')>=0||t.indexOf('一壘')>=0||t.indexOf('二壘')>=0||t.indexOf('三壘')>=0||t.indexOf('全壘')>=0){
-    batter.stats.ab++; batter.stats.h++;
+    isHit=true; batter.stats.ab++; batter.stats.h++;
     if(t.indexOf('二壘')>=0) batter.stats.doubles++;
     if(t.indexOf('三壘')>=0) batter.stats.triples++;
     if(t.indexOf('全壘')>=0){ batter.stats.hr++; }
     state.hits[currentTeam()]++;
-    applyPitcherResult('1B',0,0,true);
-  } else {
-    applyPitcherResult('OUT',0,0,false);
+    type='1B';
   }
+  applyPitcherResult(type, runsScored, outsAdded, isHit);
+  flushAtBat(summary);
   state.balls=0; state.strikes=0;
+  state.outs+=outsAdded;
   if(state.outs>=3){
     addLog('─── 結束'+state.inning+half+' ───');
     setCurrentBatterIdx(currentBatterIdx()+1);
